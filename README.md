@@ -1,5 +1,7 @@
 # rag-experiment
 
+
+
 RUn Ollama
 ```bash
 
@@ -11,3 +13,9 @@ docker run -it \
     ollama/ollama
 
 ```
+
+
+
+## Create ground truth data
+
+Make sure to add the export
