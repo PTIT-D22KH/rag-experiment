@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 from elasticsearch import Elasticsearch
 from tqdm.auto import tqdm
 from dotenv import load_dotenv
+import json
 
 from db import init_db
 
@@ -14,27 +15,34 @@ ELASTIC_URL = os.getenv("ELASTIC_URL_LOCAL")
 MODEL_NAME = os.getenv("MODEL_NAME")
 INDEX_NAME = os.getenv("INDEX_NAME")
 
-BASE_URL = "https://github.com/DataTalksClub/llm-zoomcamp/blob/main"
+# BASE_URL = "https://github.com/DataTalksClub/llm-zoomcamp/blob/main"
+BASE_PATH = "../data/vietnamese_rag"
+NUM_FILES = 5
 
+def load_documents(base_path, num_files):
+    documents = []
+    for i in range(1, num_files + 1):
+        file_path = f'{base_path}/documents-with-ids{i}.json'
+        with open(file_path, 'rt') as f_in:
+            documents.extend(json.load(f_in))
+    return documents
 
 def fetch_documents():
     print("Fetching documents...")
-    relative_url = "03-vector-search/eval/documents-with-ids.json"
-    docs_url = f"{BASE_URL}/{relative_url}?raw=1"
-    docs_response = requests.get(docs_url)
-    documents = docs_response.json()
+    # base_path = '../data/vietnamese_rag'
+    documents = load_documents(BASE_PATH, NUM_FILES)
     print(f"Fetched {len(documents)} documents")
     return documents
 
 
 def fetch_ground_truth():
     print("Fetching ground truth data...")
-    relative_url = "03-vector-search/eval/ground-truth-data.csv"
-    ground_truth_url = f"{BASE_URL}/{relative_url}?raw=1"
+    relative_path = "ground_truth_data/ground_truth_data.csv"
+    ground_truth_url = f"{BASE_PATH}/{relative_path}"
     df_ground_truth = pd.read_csv(ground_truth_url)
-    df_ground_truth = df_ground_truth[
-        df_ground_truth.course == "machine-learning-zoomcamp"
-    ]
+    # df_ground_truth = df_ground_truth[
+    #     df_ground_truth.course == "machine-learning-zoomcamp"
+    # ]
     ground_truth = df_ground_truth.to_dict(orient="records")
     print(f"Fetched {len(ground_truth)} ground truth records")
     return ground_truth
@@ -50,22 +58,25 @@ def setup_elasticsearch():
     es_client = Elasticsearch(ELASTIC_URL)
 
     index_settings = {
-        "settings": {"number_of_shards": 1, "number_of_replicas": 0},
+        "settings": {
+            "number_of_shards": 1,
+            "number_of_replicas": 0
+        },
         "mappings": {
             "properties": {
-                "text": {"type": "text"},
-                "section": {"type": "text"},
+                "group": {"type": "keyword"},
+                "context": {"type": "text"},
                 "question": {"type": "text"},
-                "course": {"type": "keyword"},
+                "answer": {"type": "text"},
                 "id": {"type": "keyword"},
-                "question_text_vector": {
+                "question_context_answer_vector": {
                     "type": "dense_vector",
                     "dims": 384,
                     "index": True,
-                    "similarity": "cosine",
+                    "similarity": "cosine"
                 },
             }
-        },
+        }
     }
 
     es_client.indices.delete(index=INDEX_NAME, ignore_unavailable=True)
