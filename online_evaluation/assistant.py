@@ -1,58 +1,55 @@
 import os
 import time
 import json
-
-from openai import OpenAI
+from groq import Groq
 
 from elasticsearch import Elasticsearch
 from sentence_transformers import SentenceTransformer
 
 
 ELASTIC_URL = os.getenv("ELASTIC_URL", "http://elasticsearch:9200")
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/v1/")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "your-api-key-here")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "your-api-key-here")
 
-
+groq_client =  Groq(api_key = GROQ_API_KEY)
 es_client = Elasticsearch(ELASTIC_URL)
-ollama_client = OpenAI(base_url=OLLAMA_URL, api_key="ollama")
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
-
-model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
 
 
-def elastic_search_text(query, course, index_name="course-questions"):
-    search_query = {
-        "size": 5,
-        "query": {
-            "bool": {
-                "must": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": ["question^3", "text", "section"],
-                        "type": "best_fields",
-                    }
-                },
-                "filter": {"term": {"course": course}},
-            }
-        },
-    }
-
-    response = es_client.search(index=index_name, body=search_query)
-    return [hit["_source"] for hit in response["hits"]["hits"]]
+model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 
 
-def elastic_search_knn(field, vector, course, index_name="course-questions"):
+# def elastic_search_text(query, course, index_name="course-questions"):
+#     search_query = {
+#         "size": 5,
+#         "query": {
+#             "bool": {
+#                 "must": {
+#                     "multi_match": {
+#                         "query": query,
+#                         "fields": ["question^3", "text", "section"],
+#                         "type": "best_fields",
+#                     }
+#                 },
+#                 "filter": {"term": {"course": course}},
+#             }
+#         },
+#     }
+
+#     response = es_client.search(index=index_name, body=search_query)
+#     return [hit["_source"] for hit in response["hits"]["hits"]]
+
+
+def elastic_search_knn(field, vector, group, index_name="vietnamese-questions"):
     knn = {
         "field": field,
         "query_vector": vector,
         "k": 5,
         "num_candidates": 10000,
-        "filter": {"term": {"course": course}},
+        "filter": {"term": {"group": group}},
     }
 
     search_query = {
         "knn": knn,
-        "_source": ["text", "section", "question", "course", "id"],
+        "_source": ["group", "context", "question", "answer", "id"],
     }
 
     es_results = es_client.search(index=index_name, body=search_query)
@@ -62,8 +59,8 @@ def elastic_search_knn(field, vector, course, index_name="course-questions"):
 
 def build_prompt(query, search_results):
     prompt_template = """
-You're a course teaching assistant. Answer the QUESTION based on the CONTEXT from the FAQ database.
-Use only the facts from the CONTEXT when answering the QUESTION.
+You're an assistant working in customer service. Your job is to provide answers to users' questions. Answer the QUESTION based on the CONTEXT from the documents database.
+Use only the facts from the CONTEXT when answering the QUESTION. Provide answer in Vietnamese , in normal text form, not using any markdown form, no need to rewrite the question and make sure that is an answer, not listing questions. Also make sure that the answer provides most information from the CONTEXT as possible .
 
 QUESTION: {question}
 
@@ -73,7 +70,7 @@ CONTEXT:
 
     context = "\n\n".join(
         [
-            f"section: {doc['section']}\nquestion: {doc['question']}\nanswer: {doc['text']}"
+            f"group: {doc['group']}\nquestion: {doc['question']}\nanswer: {doc['answer']}\ncontext: {doc['context'][:1000]}"
             for doc in search_results
         ]
     )
@@ -82,19 +79,8 @@ CONTEXT:
 
 def llm(prompt, model_choice):
     start_time = time.time()
-    if model_choice.startswith('ollama/'):
-        response = ollama_client.chat.completions.create(
-            model=model_choice.split('/')[-1],
-            messages=[{"role": "user", "content": prompt}]
-        )
-        answer = response.choices[0].message.content
-        tokens = {
-            'prompt_tokens': response.usage.prompt_tokens,
-            'completion_tokens': response.usage.completion_tokens,
-            'total_tokens': response.usage.total_tokens
-        }
-    elif model_choice.startswith('openai/'):
-        response = openai_client.chat.completions.create(
+    if model_choice.startswith('groq/'):
+        response = groq_client.chat.completions.create(
             model=model_choice.split('/')[-1],
             messages=[{"role": "user", "content": prompt}]
         )
@@ -135,7 +121,7 @@ def evaluate_relevance(question, answer):
     """.strip()
 
     prompt = prompt_template.format(question=question, answer=answer)
-    evaluation, tokens, _ = llm(prompt, 'openai/gpt-4o-mini')
+    evaluation, tokens, _ = llm(prompt, 'groq/llama3-8b-8192')
     
     try:
         json_eval = json.loads(evaluation)
