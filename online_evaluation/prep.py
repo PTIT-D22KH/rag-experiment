@@ -87,10 +87,8 @@ def setup_elasticsearch():
 
 def index_documents(es_client, documents, model):
     print("Indexing documents...")
-    for doc in tqdm(documents):
-        question = doc["question"]
-        text = doc["text"]
-        doc["question_text_vector"] = model.encode(question + " " + text).tolist()
+    for doc in tqdm(documents): 
+        doc["question_text_vector"] ;
         es_client.index(index=INDEX_NAME, document=doc)
     print(f"Indexed {len(documents)} documents")
 
