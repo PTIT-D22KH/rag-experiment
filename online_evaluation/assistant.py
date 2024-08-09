@@ -127,7 +127,26 @@ def evaluate_relevance(question, answer):
         json_eval = json.loads(evaluation)
         return json_eval['Relevance'], json_eval['Explanation'], tokens
     except json.JSONDecodeError:
+        try:
+            # str_eval = "{" + str_eval.lstrip("{")  # Ensure it starts with an opening brace
+            str_eval = str_eval.rstrip('}') + '}'  # Ensure it ends with a closing brace
+            json_eval = json.loads(str_eval)
+        except json.JSONDecodeError as e:
+            print(f"Failed to fix JSON string: {e}")
         return "UNKNOWN", "Failed to parse evaluation", tokens
+    try:
+            json_eval = json.loads(str_eval)
+        except json.JSONDecodeError as e:
+            print(f"JSONDecodeError: {e}")
+            # Attempt to fix the JSON string
+            try:
+                # str_eval = "{" + str_eval.lstrip("{")  # Ensure it starts with an opening brace
+                str_eval = str_eval.rstrip('}') + '}'  # Ensure it ends with a closing brace
+                json_eval = json.loads(str_eval)
+            except json.JSONDecodeError as e:
+                print(f"Failed to fix JSON string: {e}")
+                continue  # Skip this evaluation if it cannot be fixed
+        json_evaluations.append(json_eval)
 
 
 def calculate_openai_cost(model_choice, tokens):
