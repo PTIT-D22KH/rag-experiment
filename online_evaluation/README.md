@@ -13,3 +13,14 @@ pip install pgcli
 docker-compose up -d
 docker-compose exec ollama ollama pull phi3
 ```
+
+
+## Mine
+
+```bash
+docker-compose up
+```
+
+``` bash
+python prep.py
+```
