@@ -93,7 +93,7 @@ def load_documents(file_path):
 def load_vectors(file_path):
     with open(file_path, 'rb') as file:
         return pickle.load(file)
-def process_documents(documents, index_name, es_client):
+def process_documents(documents, es_client):
     full_documents = []
     for i in range(1, 6):
         path = BASE_PATH + "/" + "question_context_answer_vector_pickle" + "/" + f"question_context_answer_vector{i}.pkl" 
@@ -113,13 +113,14 @@ def process_documents(documents, index_name, es_client):
             data[j]['question_context_answer_vector'] = document_qta_vector_list[j]['question_context_answer_vector']
         full_documents.extend(data)
     for doc in tqdm(full_documents):
-        es_client.index(index=index_name, document=doc)
+        es_client.index(index=INDEX_NAME, document=doc)
 
 def index_documents(es_client, documents, model):
     print("Indexing documents...")
-    for doc in tqdm(documents): 
-        doc["question_text_vector"] ;
-        es_client.index(index=INDEX_NAME, document=doc)
+    process_documents(documents, es_client)
+    # for doc in tqdm(documents): 
+    #     doc["question_text_vector"] ;
+    #     es_client.index(index=INDEX_NAME, document=doc)
     print(f"Indexed {len(documents)} documents")
 
 
