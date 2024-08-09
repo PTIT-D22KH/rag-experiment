@@ -95,7 +95,6 @@ def load_vectors(file_path):
         return pickle.load(file)
 def process_documents(documents, index_name, es_client):
     full_documents = []
-    
     for i in range(1, 6):
         path = BASE_PATH + "/" + "question_context_answer_vector_pickle" + "/" + f"question_context_answer_vector{i}.pkl" 
         if i == 1:
