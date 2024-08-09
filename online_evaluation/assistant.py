@@ -129,43 +129,27 @@ def evaluate_relevance(question, answer):
     except json.JSONDecodeError:
         try:
             # str_eval = "{" + str_eval.lstrip("{")  # Ensure it starts with an opening brace
-            str_eval = str_eval.rstrip('}') + '}'  # Ensure it ends with a closing brace
+            str_eval = evaluation.rstrip('}') + '}'  # Ensure it ends with a closing brace
             json_eval = json.loads(str_eval)
         except json.JSONDecodeError as e:
-            print(f"Failed to fix JSON string: {e}")
-        return "UNKNOWN", "Failed to parse evaluation", tokens
-    try:
-            json_eval = json.loads(str_eval)
-        except json.JSONDecodeError as e:
-            print(f"JSONDecodeError: {e}")
-            # Attempt to fix the JSON string
-            try:
-                # str_eval = "{" + str_eval.lstrip("{")  # Ensure it starts with an opening brace
-                str_eval = str_eval.rstrip('}') + '}'  # Ensure it ends with a closing brace
-                json_eval = json.loads(str_eval)
-            except json.JSONDecodeError as e:
-                print(f"Failed to fix JSON string: {e}")
-                continue  # Skip this evaluation if it cannot be fixed
-        json_evaluations.append(json_eval)
+            return "UNKNOWN", "Failed to parse evaluation", tokens
 
 
 def calculate_openai_cost(model_choice, tokens):
     openai_cost = 0
 
-    if model_choice == 'openai/gpt-3.5-turbo':
+    if model_choice == 'groq/llama3-8b-8192':
         openai_cost = (tokens['prompt_tokens'] * 0.0015 + tokens['completion_tokens'] * 0.002) / 1000
-    elif model_choice in ['openai/gpt-4o', 'openai/gpt-4o-mini']:
+    elif model_choice in ['groq/gemma2-9b-it', 'groq/gemma-7b-it']:
         openai_cost = (tokens['prompt_tokens'] * 0.03 + tokens['completion_tokens'] * 0.06) / 1000
 
     return openai_cost
 
 
-def get_answer(query, course, model_choice, search_type):
+def get_answer(query, group, model_choice, search_type):
     if search_type == 'Vector':
         vector = model.encode(query)
-        search_results = elastic_search_knn('question_text_vector', vector, course)
-    else:
-        search_results = elastic_search_text(query, course)
+        search_results = elastic_search_knn('question_context_answer_vector', vector, group)
 
     prompt = build_prompt(query, search_results)
     answer, tokens, response_time = llm(prompt, model_choice)
@@ -186,5 +170,5 @@ def get_answer(query, course, model_choice, search_type):
         'eval_prompt_tokens': eval_tokens['prompt_tokens'],
         'eval_completion_tokens': eval_tokens['completion_tokens'],
         'eval_total_tokens': eval_tokens['total_tokens'],
-        'openai_cost': openai_cost
+        'groq_cost': openai_cost
     }

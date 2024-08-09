@@ -11,8 +11,8 @@ def print_log(message):
 
 
 def main():
-    print_log("Starting the Course Assistant application")
-    st.title("Course Assistant")
+    print_log("Starting the Vietnamese chatbot application")
+    st.title("Vietnamese chatbot")
 
     # Session state initialization
     if 'conversation_id' not in st.session_state:
@@ -23,23 +23,23 @@ def main():
         print_log("Feedback count initialized to 0")
 
     # Course selection
-    course = st.selectbox(
-        "Select a course:",
-        ["machine-learning-zoomcamp", "data-engineering-zoomcamp", "mlops-zoomcamp"]
+    group = st.selectbox(
+        "Select a group:",
+        ["General", "Legal", "Expert"]
     )
-    print_log(f"User selected course: {course}")
+    print_log(f"User selected group: {group}")
 
     # Model selection
     model_choice = st.selectbox(
         "Select a model:",
-        ["ollama/phi3", "openai/gpt-3.5-turbo", "openai/gpt-4o", "openai/gpt-4o-mini"]
+        ['groq/llama3-8b-8192', 'groq/gemma2-9b-it', 'groq/gemma-7b-it']
     )
     print_log(f"User selected model: {model_choice}")
 
     # Search type selection
     search_type = st.radio(
         "Select search type:",
-        ["Text", "Vector"]
+        ["Vector"]
     )
     print_log(f"User selected search type: {search_type}")
 
@@ -51,7 +51,7 @@ def main():
         with st.spinner('Processing...'):
             print_log(f"Getting answer from assistant using {model_choice} model and {search_type} search")
             start_time = time.time()
-            answer_data = get_answer(user_input, course, model_choice, search_type)
+            answer_data = get_answer(user_input, group, model_choice, search_type)
             end_time = time.time()
             print_log(f"Answer received in {end_time - start_time:.2f} seconds")
             st.success("Completed!")
