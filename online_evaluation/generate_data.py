@@ -25,8 +25,8 @@ SAMPLE_ANSWERS = [
     "Cross-validation is a technique used to assess how well a model will generalize to an independent dataset. It involves partitioning the data into subsets, training the model on a subset, and validating it on the remaining data.",
 ]
 
-COURSES = ["machine-learning-zoomcamp", "data-engineering-zoomcamp", "mlops-zoomcamp"]
-MODELS = ["ollama/phi3", "openai/gpt-3.5-turbo", "openai/gpt-4o", "openai/gpt-4o-mini"]
+COURSES = ["General", "Legal", "Expert"]
+MODELS = ['groq/llama3-8b-8192','groq/gemma2-9b-it', 'groq/gemma-7b-it']
 RELEVANCE = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
 
 
@@ -44,7 +44,7 @@ def generate_synthetic_data(start_time, end_time):
 
         openai_cost = 0
 
-        if model.startswith("openai/"):
+        if model.startswith("groq/"):
             openai_cost = random.uniform(0.001, 0.1)
 
         answer_data = {
@@ -59,7 +59,7 @@ def generate_synthetic_data(start_time, end_time):
             "eval_prompt_tokens": random.randint(50, 150),
             "eval_completion_tokens": random.randint(20, 100),
             "eval_total_tokens": random.randint(70, 250),
-            "openai_cost": openai_cost,
+            "groq_cost": openai_cost,
         }
 
         save_conversation(conversation_id, question, answer_data, course, current_time)
@@ -99,7 +99,7 @@ def generate_live_data():
 
         openai_cost = 0
 
-        if model.startswith("openai/"):
+        if model.startswith("groq/"):
             openai_cost = random.uniform(0.001, 0.1)
 
         answer_data = {
@@ -114,7 +114,7 @@ def generate_live_data():
             "eval_prompt_tokens": random.randint(50, 150),
             "eval_completion_tokens": random.randint(20, 100),
             "eval_total_tokens": random.randint(70, 250),
-            "openai_cost": openai_cost,
+            "groq_cost": openai_cost,
         }
 
         save_conversation(conversation_id, question, answer_data, course, current_time)
