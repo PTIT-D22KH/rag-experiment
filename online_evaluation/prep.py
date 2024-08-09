@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 from elasticsearch import Elasticsearch
 from tqdm.auto import tqdm
 from dotenv import load_dotenv
+import pickle
 import json
 
 from db import init_db
@@ -84,6 +85,36 @@ def setup_elasticsearch():
     print(f"Elasticsearch index '{INDEX_NAME}' created")
     return es_client
 
+def load_documents(file_path):
+    with open(file_path, 'rt') as f_in:
+        documents = json.load(f_in)
+    return documents
+
+def load_vectors(file_path):
+    with open(file_path, 'rb') as file:
+        return pickle.load(file)
+def process_documents(documents, index_name, es_client):
+    full_documents = []
+    
+    for i in range(1, 6):
+        path = BASE_PATH + "/" + "question_context_answer_vector_pickle" + "/" + f"question_context_answer_vector{i}.pkl" 
+        if i == 1:
+            data = load_documents(path).copy()
+        elif i == 2:
+            data = load_documents(path).copy()
+        elif i == 3:
+            data = load_documents(path).copy()
+        elif i == 4:
+            data = load_documents(path).copy()
+        elif i == 5:
+            data = load_documents(path).copy()
+        document_qta_vector_list = load_vectors(f'../data/vietnamese_rag/question_context_answer_vector_pickle/question_context_answer_vector{i}.pkl')
+
+        for j in range(len(data)):
+            data[j]['question_context_answer_vector'] = document_qta_vector_list[j]['question_context_answer_vector']
+        full_documents.extend(data)
+    for doc in tqdm(full_documents):
+        es_client.index(index=index_name, document=doc)
 
 def index_documents(es_client, documents, model):
     print("Indexing documents...")
