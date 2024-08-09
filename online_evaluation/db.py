@@ -3,9 +3,12 @@ import psycopg2
 from psycopg2.extras import DictCursor
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import uuid
 
 tz = ZoneInfo("Europe/Berlin")
 
+def generate_unique_id():
+    return str(uuid.uuid4())
 
 def get_db_connection():
     return psycopg2.connect(
@@ -60,6 +63,9 @@ def save_conversation(conversation_id, question, answer_data, course, timestamp=
     if timestamp is None:
         timestamp = datetime.now(tz)
     
+    if conversation_id is None:
+        conversation_id = generate_unique_id()
+    
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
@@ -86,11 +92,14 @@ def save_conversation(conversation_id, question, answer_data, course, timestamp=
                     answer_data["eval_prompt_tokens"],
                     answer_data["eval_completion_tokens"],
                     answer_data["eval_total_tokens"],
-                    answer_data["openai_cost"],
+                    answer_data["groq_cost"],
                     timestamp,
                 ),
             )
         conn.commit()
+    except psycopg2.errors.UniqueViolation:
+        print(f"Duplicate ID {conversation_id} detected. Generating a new ID.")
+        save_conversation(None, question, answer_data, course, timestamp)
     finally:
         conn.close()
 

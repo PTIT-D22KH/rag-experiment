@@ -128,10 +128,10 @@ def evaluate_relevance(question, answer):
         return json_eval['Relevance'], json_eval['Explanation'], tokens
     except json.JSONDecodeError:
         try:
-            # str_eval = "{" + str_eval.lstrip("{")  # Ensure it starts with an opening brace
             str_eval = evaluation.rstrip('}') + '}'  # Ensure it ends with a closing brace
             json_eval = json.loads(str_eval)
-        except json.JSONDecodeError as e:
+            return json_eval['Relevance'], json_eval['Explanation'], tokens
+        except json.JSONDecodeError:
             return "UNKNOWN", "Failed to parse evaluation", tokens
 
 
@@ -145,7 +145,6 @@ def calculate_openai_cost(model_choice, tokens):
 
     return openai_cost
 
-
 def get_answer(query, group, model_choice, search_type):
     if search_type == 'Vector':
         vector = model.encode(query)
@@ -155,6 +154,8 @@ def get_answer(query, group, model_choice, search_type):
     answer, tokens, response_time = llm(prompt, model_choice)
     
     relevance, explanation, eval_tokens = evaluate_relevance(query, answer)
+    if relevance is None or explanation is None or eval_tokens is None:
+        relevance, explanation, eval_tokens = "UNKNOWN", "Failed to evaluate relevance", {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
 
     openai_cost = calculate_openai_cost(model_choice, tokens)
  

@@ -62,12 +62,12 @@ def main():
             st.write(f"Relevance: {answer_data['relevance']}")
             st.write(f"Model used: {answer_data['model_used']}")
             st.write(f"Total tokens: {answer_data['total_tokens']}")
-            if answer_data['openai_cost'] > 0:
-                st.write(f"OpenAI cost: ${answer_data['openai_cost']:.4f}")
+            if answer_data['groq_cost'] > 0:
+                st.write(f"OpenAI cost: ${answer_data['groq_cost']:.4f}")
 
             # Save conversation to database
             print_log("Saving conversation to database")
-            save_conversation(st.session_state.conversation_id, user_input, answer_data, course)
+            save_conversation(st.session_state.conversation_id, user_input, answer_data, group)
             print_log("Conversation saved successfully")
 
     # Feedback buttons
