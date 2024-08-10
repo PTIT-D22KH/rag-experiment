@@ -18,13 +18,24 @@ INDEX_NAME = os.getenv("INDEX_NAME")
 
 BASE_PATH = "../data/vietnamese_rag"
 NUM_FILES = 5
+BASE_URL = "https://github.com/PTIT-D22KH/rag-experiment/blob/main"
 
-def load_documents(base_path, num_files):
+# def load_documents(base_path, num_files):
+#     documents = []
+#     for i in range(1, num_files + 1):
+#         file_path = f'{base_path}/documents-with-ids{i}.json'
+#         with open(file_path, 'rt', encoding='utf-8') as f_in:
+#             documents.extend(json.load(f_in))
+#     return documents
+
+def load_documents(base_url, num_files):
     documents = []
     for i in range(1, num_files + 1):
-        file_path = f'{base_path}/documents-with-ids{i}.json'
-        with open(file_path, 'rt', encoding='utf-8') as f_in:
-            documents.extend(json.load(f_in))
+        relative_url = f"data/vietnamese_rag/documents-with-ids{i}.json"
+        docs_url = f"{BASE_URL}/{relative_url}?raw=1"
+        docs_response = requests.get(docs_url)
+        document = docs_response.json()
+        documents.extend(document)
     return documents
 
 def fetch_documents():
@@ -33,10 +44,19 @@ def fetch_documents():
     print(f"Fetched {len(documents)} documents")
     return documents
 
+# def fetch_ground_truth():
+#     print("Fetching ground truth data...")
+#     relative_path = "ground_truth_data/ground_truth_data.csv"
+#     ground_truth_url = f"{BASE_PATH}/{relative_path}"
+#     df_ground_truth = pd.read_csv(ground_truth_url)
+#     ground_truth = df_ground_truth.to_dict(orient="records")
+#     print(f"Fetched {len(ground_truth)} ground truth records")
+#     return ground_truth
+
 def fetch_ground_truth():
     print("Fetching ground truth data...")
-    relative_path = "ground_truth_data/ground_truth_data.csv"
-    ground_truth_url = f"{BASE_PATH}/{relative_path}"
+    relative_url = "data/vietnamese_rag/ground_truth_data/ground_truth_data.csv?raw=1"
+    ground_truth_url = f"{BASE_URL}/{relative_url}?raw=1"
     df_ground_truth = pd.read_csv(ground_truth_url)
     ground_truth = df_ground_truth.to_dict(orient="records")
     print(f"Fetched {len(ground_truth)} ground truth records")
@@ -77,10 +97,16 @@ def setup_elasticsearch():
     print(f"Elasticsearch index '{INDEX_NAME}' created")
     return es_client
 
-def load_documents_json(file_path):
-    with open(file_path, 'rt', encoding='utf-8') as f_in:
-        documents = json.load(f_in)
-    return documents
+# def load_documents_json(file_path):
+#     with open(file_path, 'rt', encoding='utf-8') as f_in:
+#         documents = json.load(f_in)
+#     return documents
+
+def load_documents_json(relative_url):
+    docs_url = f"{BASE_URL}/{relative_url}?raw=1"
+    docs_response = requests.get(docs_url)
+    document = docs_response.json()
+    return document
 
 def load_vectors(file_path):
     with open(file_path, 'rb') as file:
@@ -89,10 +115,11 @@ def load_vectors(file_path):
 def process_documents(es_client):
     full_documents = []
     for i in range(1, 6):
-        json_path = f"{BASE_PATH}/documents-with-ids{i}.json"
+        # json_path = f"{BASE_PATH}/documents-with-ids{i}.json"
         pickle_path = f"{BASE_PATH}/question_context_answer_vector_pickle/question_context_answer_vector{i}.pkl"
-        
-        data = load_documents_json(json_path)
+        json_relative_url = "data/vietnamese_rag/documents-with-ids1.json?raw=1"
+        # data = load_documents_json(json_path)
+        data = load_documents_json(json_relative_url)
         document_qta_vector_list = load_vectors(pickle_path)
 
         for j in range(len(data)):
@@ -117,6 +144,7 @@ def main():
     index_documents(es_client, documents, model)
 
     print("Initializing database...")
+    # create_database()
     init_db()
 
     print("Indexing process completed successfully!")

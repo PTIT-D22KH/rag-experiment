@@ -135,15 +135,15 @@ def evaluate_relevance(question, answer):
             return "UNKNOWN", "Failed to parse evaluation", tokens
 
 
-def calculate_openai_cost(model_choice, tokens):
-    openai_cost = 0
+def calculate_groq_cost(model_choice, tokens):
+    groq_cost = 0
 
     if model_choice == 'groq/llama3-8b-8192':
-        openai_cost = (tokens['prompt_tokens'] * 0.0015 + tokens['completion_tokens'] * 0.002) / 1000
+        groq_cost = (tokens['prompt_tokens'] * 0.0015 + tokens['completion_tokens'] * 0.002) / 1000
     elif model_choice in ['groq/gemma2-9b-it', 'groq/gemma-7b-it']:
-        openai_cost = (tokens['prompt_tokens'] * 0.03 + tokens['completion_tokens'] * 0.06) / 1000
+        groq_cost = (tokens['prompt_tokens'] * 0.03 + tokens['completion_tokens'] * 0.06) / 1000
 
-    return openai_cost
+    return groq_cost
 
 def get_answer(query, group, model_choice, search_type):
     if search_type == 'Vector':
@@ -157,13 +157,13 @@ def get_answer(query, group, model_choice, search_type):
     if relevance is None or explanation is None or eval_tokens is None:
         relevance, explanation, eval_tokens = "UNKNOWN", "Failed to evaluate relevance", {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
 
-    openai_cost = calculate_openai_cost(model_choice, tokens)
+    groq_cost = calculate_groq_cost(model_choice, tokens)
  
     return {
         'answer': answer,
         'response_time': response_time,
         'relevance': relevance,
-        'relevance_explanation': explanation,
+        'f': explanation,
         'model_used': model_choice,
         'prompt_tokens': tokens['prompt_tokens'],
         'completion_tokens': tokens['completion_tokens'],
@@ -171,5 +171,5 @@ def get_answer(query, group, model_choice, search_type):
         'eval_prompt_tokens': eval_tokens['prompt_tokens'],
         'eval_completion_tokens': eval_tokens['completion_tokens'],
         'eval_total_tokens': eval_tokens['total_tokens'],
-        'groq_cost': openai_cost
+        'groq_cost': groq_cost
     }

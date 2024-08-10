@@ -25,9 +25,9 @@ SAMPLE_ANSWERS = [
     "Cross-validation is a technique used to assess how well a model will generalize to an independent dataset. It involves partitioning the data into subsets, training the model on a subset, and validating it on the remaining data.",
 ]
 
-COURSES = ["General", "Legal", "Expert"]
+GROUPS = ["General", "Legal", "Expert"]
 MODELS = ['groq/llama3-8b-8192','groq/gemma2-9b-it', 'groq/gemma-7b-it']
-RELEVANCE = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
+RELEVANCE = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT", "UNKNOWN"]
 
 
 def generate_synthetic_data(start_time, end_time):
@@ -38,14 +38,14 @@ def generate_synthetic_data(start_time, end_time):
         conversation_id = str(uuid.uuid4())
         question = random.choice(SAMPLE_QUESTIONS)
         answer = random.choice(SAMPLE_ANSWERS)
-        course = random.choice(COURSES)
+        group = random.choice(GROUPS)
         model = random.choice(MODELS)
         relevance = random.choice(RELEVANCE)
 
-        openai_cost = 0
+        groq_cost = 0
 
         if model.startswith("groq/"):
-            openai_cost = random.uniform(0.001, 0.1)
+            groq_cost = random.uniform(0.001, 0.1)
 
         answer_data = {
             "answer": answer,
@@ -59,12 +59,12 @@ def generate_synthetic_data(start_time, end_time):
             "eval_prompt_tokens": random.randint(50, 150),
             "eval_completion_tokens": random.randint(20, 100),
             "eval_total_tokens": random.randint(70, 250),
-            "groq_cost": openai_cost,
+            "groq_cost": groq_cost,
         }
 
-        save_conversation(conversation_id, question, answer_data, course, current_time)
+        save_conversation(conversation_id, question, answer_data, group, current_time)
         print(
-            f"Saved conversation: ID={conversation_id}, Time={current_time}, Course={course}, Model={model}"
+            f"Saved conversation: ID={conversation_id}, Time={current_time}, Group ={group}, Model={model}"
         )
 
         if random.random() < 0.7:
@@ -93,14 +93,14 @@ def generate_live_data():
         conversation_id = str(uuid.uuid4())
         question = random.choice(SAMPLE_QUESTIONS)
         answer = random.choice(SAMPLE_ANSWERS)
-        course = random.choice(COURSES)
+        group = random.choice(GROUPS)
         model = random.choice(MODELS)
         relevance = random.choice(RELEVANCE)
 
-        openai_cost = 0
+        groq_cost = 0
 
         if model.startswith("groq/"):
-            openai_cost = random.uniform(0.001, 0.1)
+            groq_cost = random.uniform(0.001, 0.1)
 
         answer_data = {
             "answer": answer,
@@ -114,12 +114,12 @@ def generate_live_data():
             "eval_prompt_tokens": random.randint(50, 150),
             "eval_completion_tokens": random.randint(20, 100),
             "eval_total_tokens": random.randint(70, 250),
-            "groq_cost": openai_cost,
+            "groq_cost": groq_cost,
         }
 
-        save_conversation(conversation_id, question, answer_data, course, current_time)
+        save_conversation(conversation_id, question, answer_data, group, current_time)
         print(
-            f"Saved live conversation: ID={conversation_id}, Time={current_time}, Course={course}, Model={model}"
+            f"Saved live conversation: ID={conversation_id}, Time={current_time}, Group ={group}, Model={model}"
         )
 
         if random.random() < 0.7:

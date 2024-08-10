@@ -22,7 +22,7 @@ def main():
         st.session_state.count = 0
         print_log("Feedback count initialized to 0")
 
-    # Course selection
+    # Group selection
     group = st.selectbox(
         "Select a group:",
         ["General", "Legal", "Expert"]
@@ -55,15 +55,17 @@ def main():
             end_time = time.time()
             print_log(f"Answer received in {end_time - start_time:.2f} seconds")
             st.success("Completed!")
+            print(answer_data)
             st.write(answer_data['answer'])
             
             # Display monitoring information
             st.write(f"Response time: {answer_data['response_time']:.2f} seconds")
             st.write(f"Relevance: {answer_data['relevance']}")
+            st.write(f"Explanation: {answer_data['f']}")
             st.write(f"Model used: {answer_data['model_used']}")
-            st.write(f"Total tokens: {answer_data['total_tokens']}")
+            # st.write(f"Total tokens: {answer_data['total_tokens']}")
             if answer_data['groq_cost'] > 0:
-                st.write(f"OpenAI cost: ${answer_data['groq_cost']:.4f}")
+                st.write(f"Groq cost: ${answer_data['groq_cost']:.4f}")
 
             # Save conversation to database
             print_log("Saving conversation to database")
@@ -89,7 +91,7 @@ def main():
 
     # Display recent conversations
     st.subheader("Recent Conversations")
-    relevance_filter = st.selectbox("Filter by relevance:", ["All", "RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"])
+    relevance_filter = st.selectbox("Filter by relevance:", ["All", "RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT", "UNKNOWN"])
     recent_conversations = get_recent_conversations(limit=5, relevance=relevance_filter if relevance_filter != "All" else None)
     for conv in recent_conversations:
         st.write(f"Q: {conv['question']}")
@@ -108,5 +110,5 @@ print_log("Streamlit app loop completed")
 
 
 if __name__ == "__main__":
-    print_log("Course Assistant application started")
+    print_log("Vietnamese chatbot application started")
     main()
