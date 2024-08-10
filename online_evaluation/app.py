@@ -61,7 +61,7 @@ def main():
             # Display monitoring information
             st.write(f"Response time: {answer_data['response_time']:.2f} seconds")
             st.write(f"Relevance: {answer_data['relevance']}")
-            st.write(f"Explanation: {answer_data['f']}")
+            st.write(f"Explanation: {answer_data['relevance_explanation']}")
             st.write(f"Model used: {answer_data['model_used']}")
             # st.write(f"Total tokens: {answer_data['total_tokens']}")
             if answer_data['groq_cost'] > 0:

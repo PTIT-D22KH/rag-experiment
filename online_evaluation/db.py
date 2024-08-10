@@ -13,7 +13,7 @@ def generate_unique_id():
 def get_db_connection():
     return psycopg2.connect(
         host=os.getenv("POSTGRES_HOST", "localhost"),
-        database=os.getenv("POSTGRES_DB", "vietnamese_questions"),
+        database=os.getenv("POSTGRES_DB", "course_assistant"),
         user=os.getenv("POSTGRES_USER", "your_username"),
         password=os.getenv("POSTGRES_PASSWORD", "your_password"),
     )
@@ -83,7 +83,7 @@ def save_conversation(conversation_id, question, answer_data, group_name, timest
                     answer_data["model_used"],
                     answer_data["response_time"],
                     answer_data["relevance"],
-                    answer_data["f"],
+                    answer_data["relevance_explanation"],
                     answer_data["prompt_tokens"],
                     answer_data["completion_tokens"],
                     answer_data["total_tokens"],
