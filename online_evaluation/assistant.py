@@ -163,7 +163,7 @@ def get_answer(query, group, model_choice, search_type):
         'answer': answer,
         'response_time': response_time,
         'relevance': relevance,
-        'f': explanation,
+        'relevance_explanation': explanation,
         'model_used': model_choice,
         'prompt_tokens': tokens['prompt_tokens'],
         'completion_tokens': tokens['completion_tokens'],
