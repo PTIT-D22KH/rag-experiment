@@ -12,12 +12,11 @@ def generate_unique_id():
 
 def get_db_connection():
     return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "postgres"),
-        database=os.getenv("POSTGRES_DB", "course_assistant"),
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        database=os.getenv("POSTGRES_DB", "vietnamese_questions"),
         user=os.getenv("POSTGRES_USER", "your_username"),
         password=os.getenv("POSTGRES_PASSWORD", "your_password"),
     )
-
 
 def init_db():
     conn = get_db_connection()
@@ -31,7 +30,7 @@ def init_db():
                     id TEXT PRIMARY KEY,
                     question TEXT NOT NULL,
                     answer TEXT NOT NULL,
-                    course TEXT NOT NULL,
+                    group_name TEXT NOT NULL,
                     model_used TEXT NOT NULL,
                     response_time FLOAT NOT NULL,
                     relevance TEXT NOT NULL,
@@ -42,7 +41,7 @@ def init_db():
                     eval_prompt_tokens INTEGER NOT NULL,
                     eval_completion_tokens INTEGER NOT NULL,
                     eval_total_tokens INTEGER NOT NULL,
-                    openai_cost FLOAT NOT NULL,
+                    groq_cost FLOAT NOT NULL,
                     timestamp TIMESTAMP WITH TIME ZONE NOT NULL
                 )
             """)
@@ -58,8 +57,7 @@ def init_db():
     finally:
         conn.close()
 
-
-def save_conversation(conversation_id, question, answer_data, course, timestamp=None):
+def save_conversation(conversation_id, question, answer_data, group_name, timestamp=None):
     if timestamp is None:
         timestamp = datetime.now(tz)
     
@@ -72,20 +70,20 @@ def save_conversation(conversation_id, question, answer_data, course, timestamp=
             cur.execute(
                 """
                 INSERT INTO conversations 
-                (id, question, answer, course, model_used, response_time, relevance, 
+                (id, question, answer, group_name, model_used, response_time, relevance, 
                 relevance_explanation, prompt_tokens, completion_tokens, total_tokens, 
-                eval_prompt_tokens, eval_completion_tokens, eval_total_tokens, openai_cost, timestamp)
+                eval_prompt_tokens, eval_completion_tokens, eval_total_tokens, groq_cost, timestamp)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, COALESCE(%s, CURRENT_TIMESTAMP))
             """,
                 (
                     conversation_id,
                     question,
                     answer_data["answer"],
-                    course,
+                    group_name,
                     answer_data["model_used"],
                     answer_data["response_time"],
                     answer_data["relevance"],
-                    answer_data["relevance_explanation"],
+                    answer_data["f"],
                     answer_data["prompt_tokens"],
                     answer_data["completion_tokens"],
                     answer_data["total_tokens"],
@@ -99,10 +97,9 @@ def save_conversation(conversation_id, question, answer_data, course, timestamp=
         conn.commit()
     except psycopg2.errors.UniqueViolation:
         print(f"Duplicate ID {conversation_id} detected. Generating a new ID.")
-        save_conversation(None, question, answer_data, course, timestamp)
+        save_conversation(None, question, answer_data, group_name, timestamp)
     finally:
         conn.close()
-
 
 def save_feedback(conversation_id, feedback, timestamp=None):
     if timestamp is None:
@@ -118,7 +115,6 @@ def save_feedback(conversation_id, feedback, timestamp=None):
         conn.commit()
     finally:
         conn.close()
-
 
 def get_recent_conversations(limit=5, relevance=None):
     conn = get_db_connection()
@@ -137,7 +133,6 @@ def get_recent_conversations(limit=5, relevance=None):
             return cur.fetchall()
     finally:
         conn.close()
-
 
 def get_feedback_stats():
     conn = get_db_connection()
