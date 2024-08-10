@@ -126,17 +126,10 @@ def get_recent_conversations(limit=5, relevance=None):
                 LEFT JOIN feedback f ON c.id = f.conversation_id
             """
             if relevance:
-                query += f" WHERE c.relevance = %s"
-                params = (relevance, limit)
-            else:
-                params = (limit,)
+                query += f" WHERE c.relevance = '{relevance}'"
             query += " ORDER BY c.timestamp DESC LIMIT %s"
 
-            # Debugging information
-            print("Executing query:", query)
-            print("With parameters:", params)
-
-            cur.execute(query, params)
+            cur.execute(query, (limit,))
             return cur.fetchall()
     finally:
         conn.close()
