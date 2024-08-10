@@ -145,7 +145,7 @@ def main():
 
     print("Initializing database...")
     # create_database()
-    init_db()
+    # init_db()
 
     print("Indexing process completed successfully!")
 
